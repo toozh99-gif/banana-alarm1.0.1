@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano Banana Pro - Prometheus Edition</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --gold: #ffd700;
+            --glow: #fff5b8;
+            --space: #050a1f;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* === SPACE BACKGROUND === */
+        #space-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .meteor {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(90deg, white, transparent);
+            box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
+            animation: meteor-fall 2s linear infinite;
+        }
+
+        @keyframes meteor-fall {
+            0% {
+                transform: translateX(0) translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(300px) translateY(300px);
+                opacity: 0;
+            }
+        }
+
+        /* === INTRO SCREEN === */
+        #intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1.5s ease-out;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: logoFloat 2s ease-in-out;
+        }
+
+        @keyframes logoFloat {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .intro-text {
+            font-size: 2rem;
+            letter-spacing: 8px;
+            color: var(--gold);
+            opacity: 0;
+            animation: fadeIn 1s 0.5s forwards;
+        }
+
+        .engineer-text {
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            color: white;
+            opacity: 0;
+            margin-top: 20px;
+            animation: fadeIn 1s 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* === MAIN APP === */
+        #main-app {
+            display: none;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-small {
+            font-size: 1.5rem;
+        }
+
+        .settings-btn {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .settings-btn:hover {
+            background: var(--gold);
+            color: black;
+            transform: rotate(90deg);
+        }
+
+        /* Main Clock Display */
+        .clock-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        #main-clock {
+            font-size: 4rem;
+            font-weight: 200;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--glow);
+            margin-bottom: 10px;
+        }
+
+        #date-display {
+            font-size: 1rem;
+            opacity: 0.7;
+            letter-spacing: 2px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            flex: 1;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: var(--gold);
+            color: black;
+            transform: translateY(-5px);
+        }
+
+        .nav-btn.active {
+            background: var(--gold);
+            color: black;
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+        }
+
+        /* === PANELS === */
+        .panel {
+            display: none;
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            max-height: calc(100vh - 220px);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel.active {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .panel h2 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Alarm Panel */
+        .alarm-list {
+            margin-bottom: 15px;
+        }
+
+        .alarm-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alarm-time {
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        .alarm-label {
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .alarm-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            background: #666;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: var(--gold);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 21px;
+            height: 21px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 27px;
+        }
+
+        .delete-btn {
+            background: rgba(255, 0, 0, 0.3);
+            border: none;
+            color: #ff4d4d;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .add-alarm-form {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--gold);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--gold);
+            color: black;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Notes Panel */
+        .note-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .note-content {
+            margin-bottom: 10px;
+        }
+
+        .note-time {
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--gold);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Todo Panel */
+        .todo-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .todo-item.completed {
+            opacity: 0.5;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gold);
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox.checked {
+            background: var(--gold);
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: black;
+            font-weight: bold;
+        }
+
+        .todo-text {
+            flex-grow: 1;
+        }
+
+        /* Settings Panel */
+        .settings-group {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .settings-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .sound-option {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--gold);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .upload-btn {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Alarm Overlay */
+        #alarm-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 3000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .alarm-animation {
+            font-size: 100px;
+            animation: alarmPulse 1s infinite;
+        }
+
+        @keyframes alarmPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .alarm-title {
+            font-size: 2rem;
+            color: var(--gold);
+            margin: 20px 0;
+        }
+
+        .alarm-message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .snooze-btn {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 1rem;
+        }
+
+        .stop-btn {
+            background: var(--gold);
+            color: black;
+            border: none;
+            padding: 20px 50px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            #main-clock {
+                font-size: 3rem;
+            }
+            .panel {
+                width: 95%;
+                max-height: calc(100vh - 200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Space Background -->
+    <div id="space-bg">
+        <div class="stars" id="stars"></div>
+    </div>
+
+    <!-- Intro Screen -->
+    <div id="intro">
+        <div class="logo">🍌</div>
+        <div class="intro-text">NANO BANANA</div>
+        <div class="engineer-text">ENGINEER: PROMETHEUS</div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="logo-small">🍌</div>
+            <button class="settings-btn" onclick="togglePanel('settings')">⚙️</button>
+        </div>
+
+        <!-- Main Clock -->
+        <div class="clock-container">
+            <div id="main-clock">00:00:00</div>
+            <div id="date-display">Loading...</div>
+        </div>
+
+        <!-- Panels -->
+        <div id="alarm-panel" class="panel">
+            <h2>⏰ ALARMS</h2>
+            <div class="alarm-list" id="alarmList"></div>
+            <div class="add-alarm-form">
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="newAlarmTime">
+                </div>
+                <div class="form-group">
+                    <label>Label (optional)</label>
+                    <input type="text" id="newAlarmLabel" placeholder="Morning Workout">
+                </div>
+                <button class="btn-primary" onclick="addAlarm()">+ ADD ALARM</button>
+            </div>
+        </div>
+
+        <div id="notes-panel" class="panel">
+            <h2>📝 NOTES</h2>
+            <div id="notesList"></div>
+            <div class="add-alarm-form">
+                <div class="form-group">
+                    <textarea id="newNote" placeholder="Write your note here..."></textarea>
+                </div>
+                <button class="btn-primary" onclick="addNote()">+ ADD NOTE</button>
+            </div>
+        </div>
+
+        <div id="todo-panel" class="panel">
+            <h2>✓ TO-DO LIST</h2>
+            <div id="todoList"></div>
+            <div class="add-alarm-form">
+                <div class="form-group">
+                    <input type="text" id="newTodo" placeholder="Add new task...">
+                </div>
+                <button class="btn-primary" onclick="addTodo()">+ ADD TASK</button>
+            </div>
+        </div>
+
+        <div id="settings-panel" class="panel">
+            <h2>⚙️ SETTINGS</h2>
+            
+            <div class="settings-group">
+                <h3>Sound</h3>
+                <div class="settings-row">
+                    <span>Alarm Sound</span>
+                </div>
+                <select class="sound-option" id="alarmSound" onchange="saveSettings()">
+                    <option value="default">Default Beep</option>
+                    <option value="gentle">Gentle Wake</option>
+                    <option value="intense">Intense Alert</option>
+                    <option value="custom">Custom Sound</option>
+                </select>
+                <input type="file" id="customSound" accept="audio/*" style="display: none;" onchange="loadCustomSound()">
+                <label for="customSound" class="upload-btn">📁 Upload Custom Sound</label>
+            </div>
+
+            <div class="settings-group">
+                <h3>Vibration</h3>
+                <div class="settings-row">
+                    <span>Vibrate on alarm</span>
+                    <div class="toggle-switch" id="vibrationToggle" onclick="toggleVibration()"></div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>Notifications</h3>
+                <div class="settings-row">
+                    <span>Enable notifications</span>
+                    <div class="toggle-switch" id="notificationToggle" onclick="toggleNotifications()"></div>
+                </div>
+                <button class="btn-primary" onclick="requestNotificationPermission()">Request Permission</button>
+            </div>
+
+            <div class="settings-group">
+                <h3>Snooze</h3>
+                <div class="settings-row">
+                    <span>Snooze duration (minutes)</span>
+                    <input type="number" id="snoozeDuration" value="5" min="1" max="30" 
+                           style="width: 60px; text-align: center;" onchange="saveSettings()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-btn" onclick="togglePanel('todo')">
+                <div class="nav-icon">✓</div>
+                <div>To-Do</div>
+            </button>
+            <button class="nav-btn" onclick="togglePanel('alarm')">
+                <div class="nav-icon">⏰</div>
+                <div>Alarms</div>
+            </button>
+            <button class="nav-btn" onclick="togglePanel('notes')">
+                <div class="nav-icon">📝</div>
+                <div>Notes</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Alarm Overlay -->
+    <div id="alarm-overlay">
+        <div class="alarm-animation">🍌</div>
+        <div class="alarm-title">BANANA ALERT!</div>
+        <div class="alarm-message" id="alarmMessage">Time to wake up!</div>
+        <button class="snooze-btn" onclick="snoozeAlarm()">😴 Snooze</button>
+        <button class="stop-btn" onclick="stopAlarm()">STOP</button>
+    </div>
+
+    <audio id="alarmAudio" loop></audio>
+
+    <script>
+        // Data Storage
+        let alarms = JSON.parse(localStorage.getItem('nanoAlarms')) || [];
+        let notes = JSON.parse(localStorage.getItem('nanoNotes')) || [];
+        let todos = JSON.parse(localStorage.getItem('nanoTodos')) || [];
+        let settings = JSON.parse(localStorage.getItem('nanoSettings')) || {
+            vibration: true,
+            notifications: false,
+            soundType: 'default',
+            customSoundURL: null,
+            snoozeDuration: 5
+        };
+
+        let currentAlarm = null;
+        let activePanel = null;
+        const alarmAudio = document.getElementById('alarmAudio');
+
+        // Initialize Space Background
+        function initSpace() {
+            const stars = document.getElementById('stars');
+            
+            // Create stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                stars.appendChild(star);
+            }
+
+            // Create meteors
+            setInterval(() => {
+                const meteor = document.createElement('div');
+                meteor.className = 'meteor';
+                meteor.style.left = Math.random() * 100 + '%';
+                meteor.style.top = Math.random() * 50 + '%';
+                meteor.style.width = Math.random() * 100 + 50 + 'px';
+                stars.appendChild(meteor);
+                setTimeout(() => meteor.remove(), 2000);
+            }, 3000);
+        }
+
+        // Intro Animation
+        setTimeout(() => {
+            document.getElementById('intro').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+            }, 1500);
+        }, 3000);
+
+        // Clock Update
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false 
+            });
+            const dateStr = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            document.getElementById('main-clock').textContent = timeStr;
+            document.getElementById('date-display').textContent = dateStr;
+
+            // Check alarms
+            checkAlarms(now);
+        }
+
+        function checkAlarms(now) {
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                               now.getMinutes().toString().padStart(2, '0');
+            const currentSeconds = now.getSeconds();
+
+            alarms.forEach(alarm => {
+                if (alarm.enabled && alarm.time === currentTime && currentSeconds === 0 && !alarm.triggered) {
+                    triggerAlarm(alarm);
+                    alarm.triggered = true;
+                    saveAlarms();
+                }
+            });
+
+            // Reset triggered status for next day
+            if (currentTime === '00:00') {
+                alarms.forEach(a => a.triggered = false);
+                saveAlarms();
+            }
+        }
+
+        // Panel Management
+        function togglePanel(panelName) {
+            const panels = ['alarm', 'notes', 'todo', 'settings'];
+            const buttons = document.querySelectorAll('.nav-btn');
+            
+            panels.forEach(p => {
+                const panel = document.getElementById(p + '-panel');
+                if (p === panelName) {
+                    if (activePanel === panelName) {
+                        panel.classList.remove('active');
+                        activePanel = null;
+                    } else {
+                        panel.classList.add('active');
+                        activePanel = panelName;
+                    }
+                } else {
+                    panel.classList.remove('active');
+                }
+            });
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            if (activePanel) {
+                event.currentTarget.classList.add('active');
+            }
+        }
+
+        // Alarm Functions
+        function addAlarm() {
+            const time = document.getElementById('newAlarmTime').value;
+            const label = document.getElementById('newAlarmLabel').value;
+
+            if (time) {
+                alarms.push({
+                    id: Date.now(),
+                    time: time,
+                    label: label || 'Alarm',
+                    enabled: true,
+                    triggered: false
+                });
+                saveAlarms();
+                renderAlarms();
+                document.getElementById('newAlarmTime').value = '';
+                document.getElementById('newAlarmLabel').value = '';
+            }
+        }
+
+        function renderAlarms() {
+            const list = document.getElementById('alarmList');
+            list.innerHTML = '';
+            
+            alarms.sort((a, b) => a.time.localeCompare(b.time)).forEach(alarm => {
+                list.innerHTML += `
+                    <div class="alarm-item">
+                        <div>
+                            <div class="alarm-time">${alarm.time}</div>
+                            <div class="alarm-label">${alarm.label}</div>
+                        </div>
+                        <div class="alarm-actions">
+                            <div class="toggle-switch ${alarm.enabled ? 'active' : ''}" 
+                                 onclick="toggleAlarm(${alarm.id})"></div>
+                            <button class="delete-btn" onclick="deleteAlarm(${alarm.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleAlarm(id) {
+            const alarm = alarms.find(a => a.id === id);
+            if (alarm) {
+                alarm.enabled = !alarm.enabled;
+                saveAlarms();
+                renderAlarms();
+            }
+        }
+
+        function deleteAlarm(id) {
+            alarms = alarms.filter(a => a.id !== id);
+            saveAlarms();
+            renderAlarms();
+        }
+
+        function saveAlarms() {
+            localStorage.setItem('nanoAlarms', JSON.stringify(alarms));
+        }
+
+        function triggerAlarm(alarm) {
+            currentAlarm = alarm;
+            document.getElementById('alarmMessage').textContent = alarm.label;
+            document.getElementById('alarm-overlay').style.display = 'flex';
+            
+            // Play sound
+            playAlarmSound();
+            
+            // Vibrate
+            if (settings.vibration && 'vibrate' in navigator) {
+                navigator.vibrate([500, 200, 500, 200, 500]);
+                setInterval(() => {
+                    if (document.getElementById('alarm-overlay').style.display === 'flex') {
+                        navigator.vibrate([500, 200, 500]);
+                    }
+                }, 2000);
+            }
+            
+            // Notification
+            if (settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification('Nano Banana Alarm', {
+                    body: alarm.label,
+                    icon: '🍌',
+                    vibrate: [500, 200, 500]
+                });
+            }
+        }
+
+        function playAlarmSound() {
+            const soundType = settings.soundType;
+            let soundURL;
+
+            const sounds = {
+                default: 'https://actions.google.com/sounds/v1/alarms/beep_loop.ogg',
+                gentle: 'https://actions.google.com/sounds/v1/alarms/gentle_wake.ogg',
+                intense: 'https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg'
+            };
+
+            if (soundType === 'custom' && settings.customSoundURL) {
+                soundURL = settings.customSoundURL;
+            } else {
+                soundURL = sounds[soundType] || sounds.default;
+            }
+
+            alarmAudio.src = soundURL;
+            alarmAudio.play().catch(e => console.log('Audio play failed:', e));
+        }
+
+        function snoozeAlarm() {
+            stopAlarm();
+            if (currentAlarm) {
+                const snoozeTime = new Date();
+                snoozeTime.setMinutes(snoozeTime.getMinutes() + parseInt(settings.snoozeDuration));
+                const snoozeTimeStr = snoozeTime.getHours().toString().padStart(2, '0') + ':' + 
+                                      snoozeTime.getMinutes().toString().padStart(2, '0');
+                
+                alarms.push({
+                    id: Date.now(),
+                    time: snoozeTimeStr,
+                    label: currentAlarm.label + ' (Snoozed)',
+                    enabled: true,
+                    triggered: false
+                });
+                saveAlarms();
+                renderAlarms();
+            }
+        }
+
+        function stopAlarm() {
+            document.getElementById('alarm-overlay').style.display = 'none';
+            alarmAudio.pause();
+            alarmAudio.currentTime = 0;
+            if ('vibrate' in navigator) {
+                navigator.vibrate(0);
+            }
+            currentAlarm = null;
+        }
+
+        // Notes Functions
+        function addNote() {
+            const content = document.getElementById('newNote').value;
+            if (content.trim()) {
+                notes.unshift({
+                    id: Date.now(),
+                    content: content,
+                    timestamp: new Date().toLocaleString()
+                });
+                saveNotes();
+                renderNotes();
+                document.getElementById('newNote').value = '';
+            }
+        }
+
+        function renderNotes() {
+            const list = document.getElementById('notesList');
+            list.innerHTML = '';
+            
+            notes.forEach(note => {
+                list.innerHTML += `
+                    <div class="note-item">
+                        <div class="note-content">${note.content}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="note-time">${note.timestamp}</div>
+                            <button class="delete-btn" onclick="deleteNote(${note.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            saveNotes();
+            renderNotes();
+        }
+
+        function saveNotes() {
+            localStorage.setItem('nanoNotes', JSON.stringify(notes));
+        }
+
+        // Todo Functions
+        function addTodo() {
+            const text = document.getElementById('newTodo').value;
+            if (text.trim()) {
+                todos.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                });
+                saveTodos();
+                renderTodos();
+                document.getElementById('newTodo').value = '';
+            }
+        }
+
+        function renderTodos() {
+            const list = document.getElementById('todoList');
+            list.innerHTML = '';
+            
+            todos.forEach(todo => {
+                list.innerHTML += `
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}">
+                        <div class="checkbox ${todo.completed ? 'checked' : ''}" 
+                             onclick="toggleTodo(${todo.id})"></div>
+                        <div class="todo-text">${todo.text}</div>
+                        <button class="delete-btn" onclick="deleteTodo(${todo.id})">🗑️</button>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveTodos();
+                renderTodos();
+            }
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== id);
+            saveTodos();
+            renderTodos();
+        }
+
+        function saveTodos() {
+            localStorage.setItem('nanoTodos', JSON.stringify(todos));
+        }
+
+        // Settings Functions
+        function loadCustomSound() {
+            const file = document.getElementById('customSound').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    settings.customSoundURL = e.target.result;
+                    settings.soundType = 'custom';
+                    document.getElementById('alarmSound').value = 'custom';
+                    saveSettings();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleVibration() {
+            settings.vibration = !settings.vibration;
+            document.getElementById('vibrationToggle').classList.toggle('active');
+            saveSettings();
+        }
+
+        function toggleNotifications() {
+            settings.notifications = !settings.notifications;
+            document.getElementById('notificationToggle').classList.toggle('active');
+            saveSettings();
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        alert('Notifications enabled!');
+                        settings.notifications = true;
+                        document.getElementById('notificationToggle').classList.add('active');
+                        saveSettings();
+                    }
+                });
+            } else {
+                alert('Notifications not supported on this device');
+            }
+        }
+
+        function saveSettings() {
+            settings.soundType = document.getElementById('alarmSound').value;
+            settings.snoozeDuration = document.getElementById('snoozeDuration').value;
+            localStorage.setItem('nanoSettings', JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            document.getElementById('alarmSound').value = settings.soundType;
+            document.getElementById('snoozeDuration').value = settings.snoozeDuration;
+            if (settings.vibration) {
+                document.getElementById('vibrationToggle').classList.add('active');
+            }
+            if (settings.notifications) {
+                document.getElementById('notificationToggle').classList.add('active');
+            }
+        }
+
+        // Initialize
+        initSpace();
+        loadSettings();
+        renderAlarms();
+        renderNotes();
+        renderTodos();
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>
